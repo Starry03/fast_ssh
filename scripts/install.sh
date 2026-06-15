@@ -38,4 +38,5 @@ fi
 
 # install
 echo "Installing..."
-sudo cp dist/main /usr/local/bin/myapp
+sudo cp dist/fast_ssh /usr/local/bin/fast_ssh
+echo "Installed to $(which fast_ssh)"
