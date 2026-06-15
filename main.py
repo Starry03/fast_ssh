@@ -61,7 +61,6 @@ def main():
 
     args = parser.parse_args()
     app = App(args)
-    app.unlock()
     app.setup()
     app.core()
 

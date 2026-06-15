@@ -25,8 +25,6 @@ class App:
         except ValueError as e:
             logger.error(e)
             exit(1)
-        self.setup()
-        self.core()
 
     def __get_saved_password(self) -> str | None:
         return keyring.get_password(App.NAME, self.user)
@@ -52,7 +50,6 @@ class App:
                 keyring.set_password("fast_ssh", environ["USER"], master_password)
             else:
                 self.db.initialize_master_password(master_password)
-        logger.info("Database unlocked successfully.")
 
     def setup(self) -> None:
         if self.parser.reset:
@@ -66,6 +63,7 @@ class App:
             name = self.parser.remove
             self.db.remove_host(name)
             logger.info(f"Host '{name}' removed successfully.")
+        logger.info("Exit (0)")
         for host in self.db.get_hosts():
             logger.info(f"Host ({host['id']}): {host['name']} ({host['ip']}) - Username: {host['username']}")
 
@@ -133,5 +131,5 @@ class App:
     def core(self) -> None:
         while True:
             _id = self.__request_connection_id()
-            if self.__try_connection(_id):
+            if _id == 0 or self.__try_connection(_id):
                 break
