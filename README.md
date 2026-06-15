@@ -1,15 +1,33 @@
-# fast_ssh
+# Fast SSH
 
-CLI per gestire host SSH con password memorizzate in modo cifrato.
+Simple cli tool to replace termius trash desktop apps
 
-## Flusso
+## Jumpstart
 
-1. Avvia il programma.
-2. Inserisci la master password per sbloccare il database.
-3. Seleziona il nome host da connettere.
-4. `fast_ssh` apre la sessione SSH e inserisce automaticamente la password dell'host quando viene richiesta.
+```sh
+./scripts/build.sh
+```
 
-## Note
+will go into `./dist/main`
 
-- Le password degli host restano cifrate nel database e vengono decrittate solo dopo lo sblocco.
-- La connessione usa una sessione SSH interattiva, quindi dopo il login puoi usare il terminale normalmente.
+## How to use it
+
+### First time run
+
+```sh
+./dist/main
+```
+
+will ask you to insert a master password
+
+### Add/remove connections
+
+```sh
+./dist/main --add-host <name> <ip> <username> <password>
+```
+password will be encrypted and stored into sql lite
+
+```sh
+./dist/main --remove-host <name> <ip> <username> <password>
+```
+
