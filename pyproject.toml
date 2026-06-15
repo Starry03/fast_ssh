@@ -1,0 +1,13 @@
+[project]
+name = "fast-ssh"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "cryptography>=49.0.0",
+    "loguru>=0.7.3",
+    "pexpect>=4.9.0",
+]
+[project.scripts]
+fast-ssh = "main:main"
