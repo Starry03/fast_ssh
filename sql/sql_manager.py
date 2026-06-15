@@ -10,6 +10,7 @@ from models.host import Host
 
 class SQLManager:
     def __init__(self, db_path: str = "hosts.db"):
+        self.unlocked = False
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
         self.setup()
@@ -179,4 +180,8 @@ class SQLManager:
         return True
 
     def remove_host(self, _id):
-        pass
+        if self.fernet is None:
+            raise PermissionError("Unlocked database required to remove hosts. Please unlock the database first.")
+
+        self.cursor.execute("DELETE FROM hosts WHERE id = ?", (_id,))
+        self.conn.commit()

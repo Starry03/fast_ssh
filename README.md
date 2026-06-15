@@ -2,32 +2,38 @@
 
 Simple cli tool to replace termius trash desktop apps
 
-## Jumpstart
+## Quickstart
 
 ```sh
-./scripts/build.sh
+git clone https://github.com/Starry03/fast_ssh
+cd fast_ssh
+./scripts/install.sh # build + installation
 ```
-
-will go into `./dist/main`
 
 ## How to use it
 
 ### First time run
 
 ```sh
-./dist/main
+fast_ssh
 ```
 
-will ask you to insert a master password
+will ask you to insert a master password (cannot be recovered)
 
 ### Add/remove connections
 
 ```sh
-./dist/main --add-host <name> <ip> <username> <password>
+fast_ssh --add-host <name> <ip> <username> <password>
 ```
 password will be encrypted and stored into sql lite
 
 ```sh
-./dist/main --remove-host <name> <ip> <username> <password>
+fast_ssh --remove-host <name>
+```
+
+### List connections
+
+```sh
+fast_ssh --list-hosts
 ```
 
