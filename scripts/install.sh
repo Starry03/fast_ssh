@@ -1,42 +1,23 @@
 #!/bin/bash
 
-# macos or linux
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "Installing on macOS..."
-    # Install dependencies for macOS
-    brew install python3
-    brew install pyinstaller
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "Installing on Linux..."
-    # Install dependencies for Linux, get distribution info
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        DISTRO=$ID
+set -euo pipefail
 
-        if [[ "$DISTRO" == "ubuntu" ]]; then
-            sudo apt update
-            sudo apt install -y python3 python3-pip
-            pip3 install pyinstaller
-        elif [[ "$DISTRO" == "fedora" ]]; then
-            sudo dnf install -y python3 python3-pip
-            pip3 install pyinstaller
-        else
-            echo "Unsupported Linux distribution: $DISTRO"
-            exit 1
-        fi
-    else
-        echo "Cannot determine Linux distribution."
-        exit 1
-    fi
-else
-    echo "Unsupported OS: $OSTYPE"
-    exit 1
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "${script_dir}/.." && pwd)"
+install_root="${HOME}/.local"
+bin_dir="${install_root}/bin"
+data_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/fast_ssh"
+
+cd "${repo_root}"
+
+if [[ ! -f dist/fast_ssh ]]; then
+    ./scripts/build.sh
 fi
 
-# build
-./scripts/build.sh
+mkdir -p "${bin_dir}" "${data_dir}"
+install -m 755 dist/fast_ssh "${bin_dir}/fast_ssh"
 
-# install
-echo "Installing..."
-sudo cp dist/fast_ssh /usr/local/bin/fast_ssh
-echo "Installed to $(which fast_ssh)"
+echo "Installed fast_ssh to ${bin_dir}/fast_ssh"
+if [[ ":${PATH}:" != *":${bin_dir}:"* ]]; then
+    echo "Add ${bin_dir} to PATH if it is not already there."
+fi

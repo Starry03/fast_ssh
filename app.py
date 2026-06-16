@@ -1,4 +1,6 @@
 from os import environ
+from pathlib import Path
+import sys
 
 import keyring
 from argparse import ArgumentParser
@@ -12,7 +14,11 @@ from sql.sql_manager import SQLManager
 
 class App:
     NAME: str = "fast_ssh"
-    ASSETS_DIR: str = "./assets"
+
+    @staticmethod
+    def __resource_path(relative_path: str) -> Path:
+        base_path = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        return base_path / relative_path
 
     def __init__(self, parser: ArgumentParser) -> None:
         self.parser: ArgumentParser = parser
@@ -36,7 +42,7 @@ class App:
         keyring.delete_password(App.NAME, self.user)
 
     def __print_title(self) -> None:
-        with open(f"{App.ASSETS_DIR}/ascii_art.txt", "r") as f:
+        with open(self.__resource_path("data/ascii_art.txt"), "r") as f:
             print(f.read())
 
     def unlock(self):

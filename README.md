@@ -7,7 +7,7 @@ Simple cli tool to replace termius trash desktop apps
 ```sh
 git clone https://github.com/Starry03/fast_ssh
 cd fast_ssh
-./scripts/install.sh # build + installation
+./scripts/install.sh
 ```
 
 ## How to use it

@@ -1,6 +1,7 @@
 import base64
 import os
 import sqlite3
+from pathlib import Path
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -9,12 +10,24 @@ from models.host import Host
 
 
 class SQLManager:
-    def __init__(self, db_path: str = "hosts.db"):
+    def __init__(self, db_path: str | None = None):
         self.unlocked = False
-        self.conn = sqlite3.connect(db_path)
+        self.db_path = db_path or self.default_db_path()
+        self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
         self.setup()
         self.fernet = None
+
+    @staticmethod
+    def default_data_dir() -> Path:
+        base_dir = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+        return base_dir / "fast_ssh"
+
+    @classmethod
+    def default_db_path(cls) -> str:
+        data_dir = cls.default_data_dir()
+        data_dir.mkdir(parents=True, exist_ok=True)
+        return str(data_dir / "hosts.db")
 
     def setup(self):
         self.cursor.execute("""
@@ -164,7 +177,8 @@ class SQLManager:
         self.conn.close()
 
     @staticmethod
-    def reset_database(db_path: str = "hosts.db") -> bool:
+    def reset_database(db_path: str | None = None) -> bool:
+        db_path = db_path or SQLManager.default_db_path()
         if not os.path.exists(db_path):
             return False
 
