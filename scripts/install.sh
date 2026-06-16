@@ -8,6 +8,9 @@ install_root="${HOME}/.local"
 bin_dir="${install_root}/bin"
 data_dir="${XDG_DATA_HOME:-${HOME}/.local/share}/fast_ssh"
 
+echo "Installing fast_ssh to ${bin_dir}/fast_ssh"
+echo "Data files will be installed to ${data_dir}"
+
 cd "${repo_root}"
 
 if [[ ! -f dist/fast_ssh ]]; then

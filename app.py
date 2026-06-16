@@ -30,7 +30,7 @@ class App:
             self.unlock()
         except ValueError as e:
             logger.error(e)
-            exit(1)
+            sys.exit(1)
 
     def __get_saved_password(self) -> str | None:
         return keyring.get_password(App.NAME, self.user)
@@ -46,8 +46,11 @@ class App:
             print(f.read())
 
     def unlock(self):
-        if self.saved_password is not None:
-            self.db.unlocked = self.db.unlock(self.saved_password)
+        try:
+            if self.saved_password is not None:
+                self.db.unlocked = self.db.unlock(self.saved_password)
+        except ValueError as e:
+            pass
         if not self.db.unlocked:
             master_password = input("Enter the master password: ")
             if self.db.is_initialized():
@@ -60,9 +63,9 @@ class App:
     def setup(self) -> None:
         if self.parser.reset:
             self.reset()
-            exit(0)
+            sys.exit(0)
         if self.parser.add:
-            name, ip, username, password = self.parser.add_host
+            name, ip, username, password = self.parser.add
             self.db.add_host(name, ip, username, password)
             logger.info(f"Host '{name}' added successfully.")
         if self.parser.remove:

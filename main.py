@@ -62,7 +62,7 @@ def main():
     args = parser.parse_args()
     app = App(args)
     app.setup()
-    if not parser.list:
+    if not args.list:
         app.core()
 
 if __name__ == "__main__":
