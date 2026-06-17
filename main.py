@@ -1,51 +1,6 @@
 import argparse
-from os import environ
-
-from loguru import logger
-import pexpect
-from pexpect.exceptions import EOF, TIMEOUT
 
 from app import App
-from sql.sql_manager import SQLManager
-from models.host import Host
-
-
-def insert_password_on_connection(host: Host, timeout: int = 5) -> bool:
-    child = pexpect.spawn(
-        "ssh",
-        [f"{host['username']}@{host['ip']}"],
-        encoding="utf-8",
-        timeout=timeout,
-    )
-
-    try:
-        while True:
-            index = child.expect(
-                [
-                    r"Are you sure you want to continue connecting \(yes/no/\[fingerprint\]\)\?",
-                    r"[Pp]assword:",
-                    EOF,
-                    TIMEOUT,
-                ]
-            )
-
-            if index == 0:
-                child.sendline("yes")
-            elif index == 1:
-                child.sendline(host["password"])
-                break
-            elif index == 2:
-                logger.error(f"SSH ended unexpectedly: {child.before.strip()}")
-                return False
-            else:
-                logger.error("Timeout while waiting for the SSH password prompt.")
-                return False
-
-        child.interact()
-    finally:
-        if child.isalive():
-            child.close()
-    return True
 
 
 def main():

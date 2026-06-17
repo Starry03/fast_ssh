@@ -1,6 +1,8 @@
 from os import environ
 from pathlib import Path
 import sys
+import shutil
+import signal
 
 import keyring
 from argparse import ArgumentParser
@@ -100,6 +102,24 @@ class App:
         )
 
         try:
+            cols, rows = shutil.get_terminal_size()
+            child.setwinsize(rows, cols)
+        except Exception:
+            pass
+
+        def sigwinch_handler(signum, frame):
+            try:
+                cols_sig, rows_sig = shutil.get_terminal_size()
+                child.setwinsize(rows_sig, cols_sig)
+            except Exception:
+                pass
+
+        if hasattr(signal, "SIGWINCH"):
+            old_handler = signal.signal(signal.SIGWINCH, sigwinch_handler)
+        else:
+            old_handler = None
+
+        try:
             while True:
                 index = child.expect(
                     [
@@ -123,6 +143,8 @@ class App:
 
             child.interact()
         finally:
+            if hasattr(signal, "SIGWINCH") and old_handler is not None:
+                signal.signal(signal.SIGWINCH, old_handler)
             if child.isalive():
                 child.close()
         return True
