@@ -1,3 +1,4 @@
+from asyncio import base_futures
 import argparse
 
 from app import App
@@ -11,13 +12,13 @@ def main():
     parser.add_argument("--remove", metavar="ID", help="Remove a host from the database by name")
     parser.add_argument("--reset", action="store_true",
                         help="Reset the master password (will require re-entering all host information)")
-    parser.add_argument("--version", action="version", version="%(prog)s 1.1")
+    parser.add_argument("--version", action="version", version="%(prog)s 1.2")
     parser.add_argument("--timeout", metavar="SECONDS", type=int, help="Timeout (seconds)")
 
     args = parser.parse_args()
     app = App(args)
     app.setup()
-    if not args.list:
+    if not (args.reset or args.list):
         app.core()
 
 if __name__ == "__main__":

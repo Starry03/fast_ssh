@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import shutil
 import signal
+import sqlite3
 
 import keyring
 from argparse import ArgumentParser
@@ -24,7 +25,17 @@ class App:
 
     def __init__(self, parser: ArgumentParser) -> None:
         self.parser: ArgumentParser = parser
-        self.db: SQLManager = SQLManager()
+        
+        # Setup signal handling
+        signal.signal(signal.SIGINT, self.handle_signal)
+        signal.signal(signal.SIGTERM, self.handle_signal)
+
+        try:
+            self.db: SQLManager = SQLManager()
+        except sqlite3.Error as e:
+            logger.error(f"Failed to connect to database: {e}")
+            sys.exit(1)
+            
         self.user = environ["USER"]
         self.saved_password: str | None = self.__get_saved_password()
         self.__print_title()
@@ -32,7 +43,21 @@ class App:
             self.unlock()
         except ValueError as e:
             logger.error(e)
+            self.cleanup()
             sys.exit(1)
+
+    def handle_signal(self, signum, frame) -> None:
+        print()
+        logger.info("Signal received. Exiting...")
+        self.cleanup()
+        sys.exit(0)
+
+    def cleanup(self) -> None:
+        if hasattr(self, "db") and self.db:
+            try:
+                self.db.close()
+            except Exception:
+                pass
 
     def __get_saved_password(self) -> str | None:
         return keyring.get_password(App.NAME, self.user)
@@ -54,7 +79,13 @@ class App:
         except ValueError as e:
             pass
         if not self.db.unlocked:
-            master_password = input("Enter the master password: ")
+            try:
+                master_password = input("Enter the master password: ")
+            except (KeyboardInterrupt, EOFError):
+                print()
+                logger.info("Operation cancelled. Exiting...")
+                self.cleanup()
+                sys.exit(0)
             if self.db.is_initialized():
                 if not self.db.unlock(master_password):
                     raise ValueError("Unable to unlock the database with the configured master password.")
@@ -68,14 +99,45 @@ class App:
             sys.exit(0)
         if self.parser.add:
             name, ip, username, password = self.parser.add
-            self.db.add_host(name, ip, username, password)
-            logger.info(f"Host '{name}' added successfully.")
+            try:
+                self.db.add_host(name, ip, username, password)
+                logger.info(f"Host '{name}' added successfully.")
+            except PermissionError as e:
+                logger.error(f"Database error: {e}")
+                self.cleanup()
+                sys.exit(1)
+            except Exception as e:
+                logger.error(f"Error adding host: {e}")
+                self.cleanup()
+                sys.exit(1)
         if self.parser.remove:
             name = self.parser.remove
-            self.db.remove_host(name)
-            logger.info(f"Host '{name}' removed successfully.")
+            try:
+                rows_deleted = self.db.remove_host(name)
+                if rows_deleted > 0:
+                    logger.info(f"Host '{name}' removed successfully.")
+                else:
+                    logger.warning(f"No host found matching '{name}'.")
+            except PermissionError as e:
+                logger.error(f"Database error: {e}")
+                self.cleanup()
+                sys.exit(1)
+            except Exception as e:
+                logger.error(f"Error removing host: {e}")
+                self.cleanup()
+                sys.exit(1)
         logger.info("Exit (0)")
-        for host in self.db.get_hosts():
+        try:
+            hosts = self.db.get_hosts()
+        except PermissionError as e:
+            logger.error(f"Database error: {e}")
+            self.cleanup()
+            sys.exit(1)
+        except Exception as e:
+            logger.error(f"Error listing hosts: {e}")
+            self.cleanup()
+            sys.exit(1)
+        for host in hosts:
             logger.info(f"Host ({host['id']}): {host['name']} ({host['ip']}) - Username: {host['username']}")
 
     def reset(self) -> None:
@@ -87,7 +149,13 @@ class App:
 
     def __request_connection_id(self) -> int:
         while True:
-            connection_choice = input("Connection id: ")
+            try:
+                connection_choice = input("Connection id: ")
+            except (KeyboardInterrupt, EOFError):
+                print()
+                logger.info("Exiting...")
+                self.cleanup()
+                sys.exit(0)
             try:
                 return int(connection_choice)
             except ValueError:
@@ -150,7 +218,18 @@ class App:
         return True
 
     def __try_connection(self, _id) -> bool:
-        host: Host = self.db.get_host(_id)
+        try:
+            host: Host = self.db.get_host(_id)
+        except ValueError as e:
+            logger.error(f"Error retrieving host: {e}")
+            return False
+        except PermissionError as e:
+            logger.error(f"Database error: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}")
+            return False
+
         if self.parser.timeout:
             res = self.__insert_password_on_connection(host, timeout=self.parser.timeout)
         else:

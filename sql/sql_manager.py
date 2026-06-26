@@ -193,9 +193,10 @@ class SQLManager:
 
         return True
 
-    def remove_host(self, _id):
+    def remove_host(self, host_identifier) -> int:
         if self.fernet is None:
             raise PermissionError("Unlocked database required to remove hosts. Please unlock the database first.")
 
-        self.cursor.execute("DELETE FROM hosts WHERE id = ?", (_id,))
+        self.cursor.execute("DELETE FROM hosts WHERE id = ? OR name = ?", (host_identifier, host_identifier))
         self.conn.commit()
+        return self.cursor.rowcount

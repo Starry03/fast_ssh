@@ -1,4 +1,6 @@
 #!/bin/bash
 
-rm -f "${HOME}/.local/bin/fast_ssh"
-echo "Uninstalled fast_ssh from ${HOME}/.local/bin/fast_ssh"
+source ./scripts/share.sh
+
+rm -f "${HOME}/.local/bin/$NAME"
+echo "Uninstalled $NAME from ${HOME}/.local/bin/$NAME"

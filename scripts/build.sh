@@ -1,7 +1,9 @@
 #!/bin/bash
 
+source ./scripts/share.sh
+
 pyinstaller \
-  -n "fast_ssh" \
+  -n $NAME \
   --clean \
   --optimize=2 \
   --onefile \
